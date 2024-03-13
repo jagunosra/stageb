@@ -1,5 +1,9 @@
 # StageBlocks Technical Takehome
 
+## Requirements
+- Node
+- MongoDB
+
 ## Installation
 - For ssh
 ```
@@ -32,7 +36,7 @@ npm install
 - Create an admin account (will require you to create an admin on first visit)
 ```
   This assumes that you set the env to http://localhost:3000
-  Visit loclahost:3000/admin
+  Visit localhost:3000/admin
   Input the details required
 ```
 
