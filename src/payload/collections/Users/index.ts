@@ -1,3 +1,4 @@
+
 import type { CollectionConfig } from 'payload/types'
 
 import { admins } from '../../access/admins'
@@ -6,11 +7,10 @@ import adminsAndUser from './access/adminsAndUser'
 import { checkRole } from './checkRole'
 import { ensureFirstUserIsAdmin } from './hooks/ensureFirstUserIsAdmin'
 import { loginAfterCreate } from './hooks/loginAfterCreate'
-
 const Users: CollectionConfig = {
   slug: 'users',
   admin: {
-    useAsTitle: 'name',
+    useAsTitle: 'email',
     defaultColumns: ['name', 'email'],
   },
   access: {
@@ -18,7 +18,7 @@ const Users: CollectionConfig = {
     create: anyone,
     update: adminsAndUser,
     delete: admins,
-    admin: ({ req: { user } }) => checkRole(['admin'], user),
+    admin: ({ req: { user } }) => checkRole(['owner', 'staff'], user),
   },
   hooks: {
     afterChange: [loginAfterCreate],
@@ -26,31 +26,89 @@ const Users: CollectionConfig = {
   auth: true,
   fields: [
     {
+      name: 'email',
+      type: 'email',
+      required: true,
+    },
+    {
       name: 'name',
       type: 'text',
+      required: true,
+    },
+    {
+      type: 'group',
+      name: 'permissions',
+      label: 'Permissions',
+      access: {
+        create: admins,
+        read: admins,
+        update: admins,
+      },
+      fields: [
+        {
+          label: 'Pages',
+          type: 'collapsible',
+          fields: [
+            {
+              name: 'getPages',
+              label: 'Read',
+              type: 'checkbox',
+            },
+            {
+              name: 'createUpdatePages',
+              label: 'Create and edit',
+              type: 'checkbox',
+            },
+            {
+              name: 'deletePages',
+              label: 'Delete',
+              type: 'checkbox',
+            },
+          ],
+        },
+        {
+          label: 'Events',
+          type: 'collapsible',
+          fields: [
+            {
+              name: 'getEvents',
+              label: 'Read',
+              type: 'checkbox',
+            },
+            {
+              name: 'createUpdateEvents',
+              label: 'Create and edit',
+              type: 'checkbox',
+            },
+            {
+              name: 'deleteEvents',
+              label: 'Delete',
+              type: 'checkbox',
+            },
+          ],
+        },
+      ],
     },
     {
       name: 'roles',
       type: 'select',
       hasMany: true,
-      defaultValue: ['user'],
+      defaultValue: ['staff'],
       options: [
         {
-          label: 'admin',
-          value: 'admin',
+          label: 'Owner',
+          value: 'owner',
         },
         {
-          label: 'user',
-          value: 'user',
+          label: 'Staff',
+          value: 'staff',
         },
       ],
       hooks: {
         beforeChange: [ensureFirstUserIsAdmin],
       },
       access: {
-        read: admins,
-        create: admins,
-        update: admins,
+        read: ({ req: { user } }) => checkRole(['owner'], user),
       },
     },
   ],

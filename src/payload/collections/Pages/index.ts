@@ -1,19 +1,20 @@
 import type { CollectionConfig } from 'payload/types'
 
-import { admins } from '../../access/admins'
-import { adminsOrPublished } from '../../access/adminsOrPublished'
-import { Archive } from '../../blocks/ArchiveBlock'
-import { CallToAction } from '../../blocks/CallToAction'
-import { Content } from '../../blocks/Content'
-import { MediaBlock } from '../../blocks/MediaBlock'
-import { hero } from '../../fields/hero'
 import { slugField } from '../../fields/slug'
 import { populateArchiveBlock } from '../../hooks/populateArchiveBlock'
 import { populatePublishedAt } from '../../hooks/populatePublishedAt'
 import { revalidatePage } from './hooks/revalidatePage'
+import { delPageAccess, getPageAccess, postPageAccess } from './access/pageAccess'
 
 export const Pages: CollectionConfig = {
   slug: 'pages',
+  auth: {
+    tokenExpiration: 7200, // How many seconds to keep the user logged in
+    verify: true, // Require email verification before being allowed to authenticate
+    maxLoginAttempts: 5, // Automatically lock a user out after X amount of failed logins
+    lockTime: 600 * 1000, // Time period to allow the max login attempts
+    // More options are available
+  },
   admin: {
     useAsTitle: 'title',
     defaultColumns: ['title', 'slug', 'updatedAt'],
@@ -32,10 +33,10 @@ export const Pages: CollectionConfig = {
     drafts: true,
   },
   access: {
-    read: adminsOrPublished,
-    update: admins,
-    create: admins,
-    delete: admins,
+    read: getPageAccess,
+    update: postPageAccess,
+    create: postPageAccess,
+    delete: delPageAccess,
   },
   fields: [
     {
@@ -44,31 +45,14 @@ export const Pages: CollectionConfig = {
       required: true,
     },
     {
-      name: 'publishedAt',
-      type: 'date',
-      admin: {
-        position: 'sidebar',
-      },
+      name: 'published',
+      type: 'checkbox',
+      required: true,
+      defaultValue: false,
     },
     {
-      type: 'tabs',
-      tabs: [
-        {
-          label: 'Hero',
-          fields: [hero],
-        },
-        {
-          label: 'Content',
-          fields: [
-            {
-              name: 'layout',
-              type: 'blocks',
-              required: true,
-              blocks: [CallToAction, Content, MediaBlock, Archive],
-            },
-          ],
-        },
-      ],
+      name: 'content',
+      type: 'richText',
     },
     slugField(),
   ],
